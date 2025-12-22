@@ -1,0 +1,12 @@
+#include "Common.ush"
+
+Texture2D ScreenColorTexture;
+SamplerState ScreenColorSampler;
+
+void MainPS(noperspective float4 UVAndScreenPos : TEXCOORD0, out float4 OutColor : SV_Target0)
+{
+	float2 UV = UVAndScreenPos.xy;
+	float3 SampleColor = Texture2DSample(ScreenColorTexture, ScreenColorSampler, UV).rgb;
+	SampleColor *= float3(1.0, 0.0, 0.0);
+	OutColor = float4(SampleColor, 1.0);
+}

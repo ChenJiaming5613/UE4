@@ -49,6 +49,7 @@
 #include "HairStrands/HairStrandsRendering.h"
 #include "PhysicsField/PhysicsFieldComponent.h"
 #include "GPUSortManager.h"
+#include "MyPostProcessRendering.h"
 #include "Experimental/Containers/SherwoodHashTable.h"
 #include "RayTracingGeometryManager.h"
 
@@ -2638,6 +2639,12 @@ void FDeferredShadingSceneRenderer::Render(FRHICommandListImmediate& RHICmdList)
 		{
 			SceneContext.SetSceneColor(nullptr);
 		});
+	}
+
+	for (int32 i = 0; i < Views.Num(); i++)
+	{
+		const FViewInfo& View = Views[i];
+		RenderMyPostProcess(GraphBuilder, View, nullptr, ViewFamilyTexture);
 	}
 
 	AddPass(GraphBuilder, [this, &SceneContext](FRHICommandListImmediate& InRHICmdList)
