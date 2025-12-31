@@ -1,5 +1,18 @@
-﻿#include "MyPostProcessRendering.h"
+#include "MyPostProcessRendering.h"
 #include "ScreenPass.h"
+
+namespace
+{
+	// type `r.MyPostProcess 1` in cmd to enable my post process
+	TAutoConsoleVariable<int32> CVarMyPostProcess(
+		TEXT("r.MyPostProcess"),
+		0,
+		TEXT("Enable My Post Process\n")
+		TEXT(" 0: OFF;")
+		TEXT(" 1: ON."),
+		ECVF_RenderThreadSafe);
+}
+
 
 class FMyPostProcessPS : public FGlobalShader
 {
@@ -21,6 +34,11 @@ IMPLEMENT_SHADER_TYPE(, FMyPostProcessPS, TEXT("/Engine/Private/MyPostProcess.us
 void RenderMyPostProcess(FRDGBuilder& GraphBuilder, const FViewInfo& View, FRDGTextureRef InputColorTexture,
 						 FRDGTextureRef ViewFamilyTexture)
 {
+	if (CVarMyPostProcess.GetValueOnRenderThread() == 0)
+	{
+		return;
+	}
+
 	FRDGTextureRef CopiedViewFamilyTexture = GraphBuilder.CreateTexture(ViewFamilyTexture->Desc, TEXT("CopiedViewFamilyTexture"));
 	AddCopyTexturePass(GraphBuilder, ViewFamilyTexture, CopiedViewFamilyTexture);
 
