@@ -1,0 +1,35 @@
+﻿#include "Common.ush"
+#include "/Engine/Generated/Material.ush"
+#include "/Engine/Generated/VertexFactory.ush"
+
+struct FCustomMeshPassVSToPS
+{
+	FVertexFactoryInterpolantsVSToPS Interpolants;
+	float4 Position : SV_POSITION;
+};
+
+void MainVS(FVertexFactoryInput Input, out FCustomMeshPassVSToPS Output)
+{
+	ResolvedView = ResolveView();
+	FVertexFactoryIntermediates VFIntermediates = GetVertexFactoryIntermediates(Input);
+	float4 WorldPos = VertexFactoryGetWorldPosition(Input, VFIntermediates);
+	Output.Position = INVARIANT(mul(WorldPos, ResolvedView.TranslatedWorldToClip));
+	
+	// setup normal tangent
+	float3x3 TangentToLocal = VertexFactoryGetTangentToLocal(Input, VFIntermediates);
+	FMaterialVertexParameters VertexParameters = GetMaterialVertexParameters(Input, VFIntermediates, WorldPos.xyz, TangentToLocal);
+	
+	// output factor interpolants
+	Output.Interpolants = VertexFactoryGetInterpolantsVSToPS(Input, VFIntermediates, VertexParameters);
+}
+ 
+void MainPS(FCustomMeshPassVSToPS Input, out float4 OutColor : SV_Target0)
+{
+	ResolvedView = ResolveView();
+	FMaterialPixelParameters MaterialParameters = GetMaterialPixelParameters(Input.Interpolants, Input.Position);
+	FPixelMaterialInputs PixelMaterialInputs;
+	CalcMaterialParameters(MaterialParameters, PixelMaterialInputs, Input.Position, true);
+	half3 BaseColor = GetMaterialBaseColor(PixelMaterialInputs);
+	OutColor.rgb = BaseColor;
+	OutColor.a = 1;
+}

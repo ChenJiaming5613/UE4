@@ -411,6 +411,8 @@ private:
 
 	/** Renders world-space lightmap density instead of the normal color. */
 	void RenderLightMapDensities(FRDGBuilder& GraphBuilder, const FRenderTargetBindingSlots& RenderTargets);
+	
+	void RenderCustomMeshPass(FRDGBuilder& GraphBuilder, const FRenderTargetBindingSlots& RenderTargets);
 
 	/** Renders one of the EDebugViewShaderMode instead of the normal color. */
 	void RenderDebugViewMode(FRDGBuilder& GraphBuilder, const FRenderTargetBindingSlots& RenderTargets);

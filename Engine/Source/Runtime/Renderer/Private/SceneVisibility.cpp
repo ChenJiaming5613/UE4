@@ -2311,7 +2311,8 @@ struct FRelevancePacket
 
 								if (bAddLightmapDensityCommands)
 								{
-									DrawCommandPacket.AddCommandsForMesh(PrimitiveIndex, PrimitiveSceneInfo, StaticMeshRelevance, StaticMesh, Scene, bCanCache, EMeshPass::LightmapDensity);
+									// DrawCommandPacket.AddCommandsForMesh(PrimitiveIndex, PrimitiveSceneInfo, StaticMeshRelevance, StaticMesh, Scene, bCanCache, EMeshPass::LightmapDensity);
+									DrawCommandPacket.AddCommandsForMesh(PrimitiveIndex, PrimitiveSceneInfo, StaticMeshRelevance, StaticMesh, Scene, bCanCache, EMeshPass::CustomMeshPass);
 								}
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 								else if (View.Family->UseDebugViewPS())
@@ -2734,8 +2735,10 @@ void ComputeDynamicMeshRelevance(EShadingPath ShadingPath, bool bAddLightmapDens
 
 			if (bAddLightmapDensityCommands)
 			{
-				PassMask.Set(EMeshPass::LightmapDensity);
-				View.NumVisibleDynamicMeshElements[EMeshPass::LightmapDensity] += NumElements;
+				// PassMask.Set(EMeshPass::LightmapDensity);
+				// View.NumVisibleDynamicMeshElements[EMeshPass::LightmapDensity] += NumElements;
+				PassMask.Set(EMeshPass::CustomMeshPass);
+				View.NumVisibleDynamicMeshElements[EMeshPass::CustomMeshPass] += NumElements;
 			}
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 			else if (View.Family->UseDebugViewPS())

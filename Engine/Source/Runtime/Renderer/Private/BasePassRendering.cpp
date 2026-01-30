@@ -1126,7 +1126,8 @@ void FDeferredShadingSceneRenderer::RenderBasePassInternal(
 	if (bRenderLightmapDensity)
 	{
 		// Override the base pass with the lightmap density pass if the viewmode is enabled.
-		RenderLightMapDensities(GraphBuilder, BasePassRenderTargets);
+		// RenderLightMapDensities(GraphBuilder, BasePassRenderTargets);
+		RenderCustomMeshPass(GraphBuilder, BasePassRenderTargets);
 	}
 	else if (ViewFamily.UseDebugViewPS())
 	{
