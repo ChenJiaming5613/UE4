@@ -108,8 +108,9 @@ void VisualizeVolumetricLightmapPS(
 #endif
 
 	// Use a diffuse color that matches the rest of the scene for LightingOnly and DetailLighting view modes
-	float3 EffectiveDiffuseColor = DiffuseColor * View.DiffuseOverrideParameter.w + View.DiffuseOverrideParameter.xyz;
-	OutColor = float4(EffectiveDiffuseColor * FinalLighting, 0);
+	// float3 EffectiveDiffuseColor = DiffuseColor * View.DiffuseOverrideParameter.w + View.DiffuseOverrideParameter.xyz;
+	// OutColor = float4(EffectiveDiffuseColor * FinalLighting, 0);
+	OutColor = float4(FinalLighting, 0);
 
 	//OutColor = float4(WorldNormal, 0);
 

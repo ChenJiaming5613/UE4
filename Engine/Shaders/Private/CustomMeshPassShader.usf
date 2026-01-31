@@ -1,4 +1,6 @@
 ﻿#include "Common.ush"
+#include "/Engine/Private/SHCommon.ush" 
+#include "/Engine/Private/VolumetricLightmapShared.ush"
 #include "/Engine/Generated/Material.ush"
 #include "/Engine/Generated/VertexFactory.ush"
 
@@ -29,7 +31,10 @@ void MainPS(FCustomMeshPassVSToPS Input, out float4 OutColor : SV_Target0)
 	FMaterialPixelParameters MaterialParameters = GetMaterialPixelParameters(Input.Interpolants, Input.Position);
 	FPixelMaterialInputs PixelMaterialInputs;
 	CalcMaterialParameters(MaterialParameters, PixelMaterialInputs, Input.Position, true);
-	half3 BaseColor = GetMaterialBaseColor(PixelMaterialInputs);
-	OutColor.rgb = BaseColor;
+
+	float3 VolumetricLightmapBrickTextureUVs = ComputeVolumetricLightmapBrickTextureUVs(MaterialParameters.AbsoluteWorldPosition);
+	FOneBandSHVectorRGB IrradianceSH = GetVolumetricLightmapSH1(VolumetricLightmapBrickTextureUVs);
+	FOneBandSHVector DiffuseTransferSH = CalcDiffuseTransferSH1(1);
+	OutColor.rgb = max(float3(0,0,0), DotSH1(IrradianceSH, DiffuseTransferSH)) / PI;
 	OutColor.a = 1;
 }
