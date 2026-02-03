@@ -4,6 +4,102 @@
 #include "/Engine/Generated/Material.ush"
 #include "/Engine/Generated/VertexFactory.ush"
 
+#define MAX_DIM 64
+#define INPUT_DIM 3
+#define OUTPUT_DIM 3
+
+#define MIDDLE_LAYER_COUNT 5
+
+float3 RunVoxelMLP(float3 InPos, StructuredBuffer<float> Weights)
+{
+    uint Offset = 0;
+    
+    float LayerIn[MAX_DIM]; 
+    float TempOut[MAX_DIM];
+
+    // ====================================================
+    // 1. Input(3) -> Hidden(64) + ReLU
+    // ====================================================
+    {
+        int InDim = INPUT_DIM;   // 3
+        int OutDim = MAX_DIM;    // 64
+        
+        uint BiasOffsetBase = Offset + (OutDim * InDim);
+
+        for (int o = 0; o < OutDim; o++)
+        {
+            float Sum = Weights[BiasOffsetBase + o];
+
+            uint WIdx = Offset + (o * InDim);
+            
+            Sum += InPos.x * Weights[WIdx + 0];
+            Sum += InPos.y * Weights[WIdx + 1];
+            Sum += InPos.z * Weights[WIdx + 2];
+
+            // ReLU
+            LayerIn[o] = max(0.0f, Sum); 
+        }
+
+        Offset += (OutDim * InDim) + OutDim;
+    }
+
+    // ====================================================
+    // 2. Hidden(64) -> Hidden(64) + ReLU
+    // ====================================================
+    for (int L = 0; L < MIDDLE_LAYER_COUNT; L++)
+    {
+        int Dim = MAX_DIM; // 64
+        uint BiasOffsetBase = Offset + (Dim * Dim);
+
+        for (int o = 0; o < Dim; o++)
+        {
+            float Sum = Weights[BiasOffsetBase + o];
+            
+            uint WStartIdx = Offset + (o * Dim);
+
+            for (int i = 0; i < Dim; i++)
+            {
+                Sum += LayerIn[i] * Weights[WStartIdx + i];
+            }
+
+            TempOut[o] = max(0.0f, Sum);
+        }
+
+        for (int k = 0; k < Dim; k++)
+        {
+            LayerIn[k] = TempOut[k];
+        }
+
+        Offset += (Dim * Dim) + Dim;
+    }
+
+    // ====================================================
+    // 3. Hidden(64) -> Output(3) (Linear / No Activation)
+    // ====================================================
+    float3 Result;
+    {
+        int InDim = MAX_DIM;     // 64
+        int OutDim = OUTPUT_DIM; // 3
+        
+        uint BiasOffsetBase = Offset + (OutDim * InDim);
+
+        for (int o = 0; o < OutDim; o++)
+        {
+            float Sum = Weights[BiasOffsetBase + o];
+            uint WStartIdx = Offset + (o * InDim);
+
+            for (int i = 0; i < InDim; i++)
+            {
+                Sum += LayerIn[i] * Weights[WStartIdx + i];
+            }
+
+            Result[o] = Sum; 
+        }
+    }
+
+    return Result;
+}
+
 struct FCustomMeshPassVSToPS
 {
 	FVertexFactoryInterpolantsVSToPS Interpolants;
@@ -32,9 +128,24 @@ void MainPS(FCustomMeshPassVSToPS Input, out float4 OutColor : SV_Target0)
 	FPixelMaterialInputs PixelMaterialInputs;
 	CalcMaterialParameters(MaterialParameters, PixelMaterialInputs, Input.Position, true);
 
-	float3 VolumetricLightmapBrickTextureUVs = ComputeVolumetricLightmapBrickTextureUVs(MaterialParameters.AbsoluteWorldPosition);
-	FOneBandSHVectorRGB IrradianceSH = GetVolumetricLightmapSH1(VolumetricLightmapBrickTextureUVs);
+	FOneBandSHVectorRGB IrradianceSH;
 	FOneBandSHVector DiffuseTransferSH = CalcDiffuseTransferSH1(1);
-	OutColor.rgb = max(float3(0,0,0), DotSH1(IrradianceSH, DiffuseTransferSH)) / PI;
-	OutColor.a = 1;
+
+	if (View.VolumetricLightmapMLPInfoVector.x == 1)
+	{
+		float3 IndirectionVolumeUVs = clamp(MaterialParameters.AbsoluteWorldPosition * View.VolumetricLightmapWorldToUVScale + View.VolumetricLightmapWorldToUVAdd, 0.0f, .99f);
+		float3 RGB = RunVoxelMLP(IndirectionVolumeUVs, View.VolumetricLightmapMLP);
+		IrradianceSH.R.V = RGB.x;
+		IrradianceSH.G.V = RGB.y;
+		IrradianceSH.B.V = RGB.z;
+		OutColor.rgb = max(float3(0, 0, 0), DotSH1(IrradianceSH, DiffuseTransferSH)) / PI;
+		OutColor.a = 1;
+	}
+	else
+	{
+		float3 VolumetricLightmapBrickTextureUVs = ComputeVolumetricLightmapBrickTextureUVs(MaterialParameters.AbsoluteWorldPosition);
+		IrradianceSH = GetVolumetricLightmapSH1(VolumetricLightmapBrickTextureUVs);
+		OutColor.rgb = max(float3(0, 0, 0), DotSH1(IrradianceSH, DiffuseTransferSH)) / PI;
+		OutColor.a = 1;
+	}
 }

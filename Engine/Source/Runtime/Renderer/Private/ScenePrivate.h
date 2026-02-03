@@ -2609,7 +2609,7 @@ public:
 	FIndirectLightingCache IndirectLightingCache;
 
 	FVolumetricLightmapSceneData VolumetricLightmapSceneData;
-	
+
 	FGPUScene GPUScene;
 
 	/** Distance field object scene data. */

@@ -16,8 +16,24 @@ public:
 
 	static bool ShouldCompilePermutation(const FMeshMaterialShaderPermutationParameters& Parameters)
 	{
-		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5)
-				&& Parameters.VertexFactoryType == &FLocalVertexFactory::StaticType;
+		if (!IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5)
+			|| Parameters.VertexFactoryType != &FLocalVertexFactory::StaticType)
+		{
+			return false;
+		}
+
+		if (Parameters.MaterialParameters.MaterialDomain != MD_Surface)
+		{
+			return false;
+		}
+
+		if (Parameters.MaterialParameters.BlendMode != BLEND_Opaque
+			&& Parameters.MaterialParameters.BlendMode != BLEND_Masked)
+		{
+			return false;
+		}
+
+		return true;
 	}
 };
 
@@ -33,8 +49,24 @@ public:
 
 	static bool ShouldCompilePermutation(const FMeshMaterialShaderPermutationParameters& Parameters)
 	{
-		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5)
-				&& Parameters.VertexFactoryType == &FLocalVertexFactory::StaticType;
+		if (!IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5)
+			|| Parameters.VertexFactoryType != &FLocalVertexFactory::StaticType)
+		{
+			return false;
+		}
+
+		if (Parameters.MaterialParameters.MaterialDomain != MD_Surface)
+		{
+			return false;
+		}
+
+		if (Parameters.MaterialParameters.BlendMode != BLEND_Opaque
+			&& Parameters.MaterialParameters.BlendMode != BLEND_Masked)
+		{
+			return false;
+		}
+
+		return true;
 	}
 };
 

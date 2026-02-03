@@ -746,6 +746,7 @@ enum ETranslucencyVolumeCascade
 	VIEW_UNIFORM_BUFFER_MEMBER(FVector, VolumetricLightmapIndirectionTextureSize) \
 	VIEW_UNIFORM_BUFFER_MEMBER(float, VolumetricLightmapBrickSize) \
 	VIEW_UNIFORM_BUFFER_MEMBER(FVector, VolumetricLightmapBrickTexelSize) \
+	VIEW_UNIFORM_BUFFER_MEMBER(FVector4, VolumetricLightmapMLPInfoVector) \
 	VIEW_UNIFORM_BUFFER_MEMBER(float, StereoIPD) \
 	VIEW_UNIFORM_BUFFER_MEMBER(float, IndirectLightingCacheShowFlag) \
 	VIEW_UNIFORM_BUFFER_MEMBER(float, EyeToPixelSpreadAngle) \
@@ -859,6 +860,7 @@ BEGIN_GLOBAL_SHADER_PARAMETER_STRUCT_WITH_CONSTRUCTOR(FViewUniformShaderParamete
 
 	SHADER_PARAMETER_SRV(StructuredBuffer<float4>, WaterIndirection)
 	SHADER_PARAMETER_SRV(StructuredBuffer<float4>, WaterData)
+	SHADER_PARAMETER_SRV(StructuredBuffer<float>, VolumetricLightmapMLP)
 
 	SHADER_PARAMETER_UAV(RWBuffer<uint>, VTFeedbackBuffer)
 	SHADER_PARAMETER_UAV(RWTexture2D<uint>, QuadOverdraw)
@@ -1184,6 +1186,8 @@ public:
 	/** Water rendering related data */
 	FShaderResourceViewRHIRef WaterIndirectionBuffer;
 	FShaderResourceViewRHIRef WaterDataBuffer;
+	FShaderResourceViewRHIRef VolumetricLightmapMLPBuffer;
+	FVector4 VolumetricLightmapMLPInfoVector;
 
 	/** Feature level for this scene */
 	const ERHIFeatureLevel::Type FeatureLevel;

@@ -1455,6 +1455,14 @@ void FViewInfo::SetupUniformBufferParameters(
 	SetupVolumetricFogUniformBufferParameters(ViewUniformShaderParameters);
 
 	SetupPrecomputedVolumetricLightmapUniformBufferParameters(Scene, Family->EngineShowFlags, ViewUniformShaderParameters);
+	if (Scene && Scene->VolumetricLightmapSceneData.GetLevelVolumetricLightmap() && Family->EngineShowFlags.VolumetricLightmap)
+	{
+		if (VolumetricLightmapMLPBuffer.IsValid())
+		{
+			ViewUniformShaderParameters.VolumetricLightmapMLP = VolumetricLightmapMLPBuffer.GetReference();
+			ViewUniformShaderParameters.VolumetricLightmapMLPInfoVector = VolumetricLightmapMLPInfoVector;
+		}
+	}
 
 	SetupPhysicsFieldUniformBufferParameters(Scene, Family->EngineShowFlags, ViewUniformShaderParameters);
 
