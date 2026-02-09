@@ -1,5 +1,4 @@
 ﻿#include "NeuralGIViewExtension.h"
-#include "Interfaces/IPluginManager.h"
 #include "SceneView.h"
 
 static TAutoConsoleVariable<int32> CVarNeuralGIEnable(
@@ -11,37 +10,9 @@ static TAutoConsoleVariable<int32> CVarNeuralGIEnable(
 	ECVF_RenderThreadSafe
 );
 
-void LoadBinData(TResourceArray<float>& FloatResourceArray)
-{
-	const FString PluginDir = IPluginManager::Get().FindPlugin(TEXT("NeuralGI"))->GetBaseDir();
-	const FString FilePath = FPaths::Combine(*PluginDir, TEXT("Resources"), TEXT("Data"), TEXT("model.bin"));
-
-	const TUniquePtr<FArchive> FileReader(IFileManager::Get().CreateFileReader(*FilePath));
-	if (FileReader)
-	{
-		const int64 FileSize = FileReader->TotalSize();
-		const int32 NumFloats = FileSize / sizeof(float);
-
-		if (NumFloats > 0)
-		{
-			FloatResourceArray.Empty(NumFloats);
-			FloatResourceArray.AddUninitialized(NumFloats);
-			FileReader->Serialize(FloatResourceArray.GetData(), FileSize);
-		}
-		FileReader->Close();
-        
-		UE_LOG(LogTemp, Log, TEXT("Successfully loaded %d floats from plugin directory."), NumFloats);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to load bin file at: %s"), *FilePath);
-	}
-}
-
 FNeuralGIViewExtension::FNeuralGIViewExtension(const FAutoRegister& AutoRegister)
 	: FSceneViewExtensionBase(AutoRegister)
 {
-	InitResources();
 }
 
 FNeuralGIViewExtension::~FNeuralGIViewExtension()
@@ -62,17 +33,11 @@ void FNeuralGIViewExtension::SetupView(FSceneViewFamily& InViewFamily, FSceneVie
 	}
 }
 
-void FNeuralGIViewExtension::InitResources()
+void FNeuralGIViewExtension::InitResources(TResourceArray<float>& DataBufferCPU)
 {
-	TResourceArray<float> DataBufferCPU;
-	LoadBinData(DataBufferCPU);
 	if (DataBufferCPU.Num() == 0)
 	{
-		DataBufferCPU.AddZeroed(1024);
-		DataBufferCPU[0] = 1.0f;
-		DataBufferCPU[1] = 0.0f;
-		DataBufferCPU[2] = 1.0f;
-		DataBufferCPU[3] = 1.0f;
+		return;
 	}
 	
 	ENQUEUE_RENDER_COMMAND(AllocateVolumetricLightmapMLPBuffer)

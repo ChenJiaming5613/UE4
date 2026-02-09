@@ -17,8 +17,9 @@ public:
 	virtual void PreRenderView_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView) override {}
 	virtual void PreRenderViewFamily_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneViewFamily& InViewFamily) override {}
 
+	void InitResources(TResourceArray<float>& DataBufferCPU);
+	
 private:
-	void InitResources();
 	void ReleaseResources();
 	
 	FStructuredBufferRHIRef VolumetricLightmapMLPBuffer;
