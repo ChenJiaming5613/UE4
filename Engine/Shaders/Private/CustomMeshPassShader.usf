@@ -10,6 +10,8 @@
 
 #define MIDDLE_LAYER_COUNT 5
 
+#define SIREN_W0 30.0
+
 float3 RunVoxelMLP(float3 InPos, StructuredBuffer<float> Weights)
 {
     uint Offset = 0;
@@ -18,7 +20,7 @@ float3 RunVoxelMLP(float3 InPos, StructuredBuffer<float> Weights)
     float TempOut[MAX_DIM];
 
     // ====================================================
-    // 1. Input(3) -> Hidden(64) + ReLU
+    // 1. Input(3) -> Hidden(64) + Activation Func
     // ====================================================
     {
         int InDim = INPUT_DIM;   // 3
@@ -36,15 +38,16 @@ float3 RunVoxelMLP(float3 InPos, StructuredBuffer<float> Weights)
             Sum += InPos.y * Weights[WIdx + 1];
             Sum += InPos.z * Weights[WIdx + 2];
 
-            // ReLU
-            LayerIn[o] = max(0.0f, Sum); 
+            // Activation Func
+            // LayerIn[o] = max(0.0f, Sum); // ReLU
+        	LayerIn[o] = sin(Sum * SIREN_W0); // SIREN
         }
 
         Offset += (OutDim * InDim) + OutDim;
     }
 
     // ====================================================
-    // 2. Hidden(64) -> Hidden(64) + ReLU
+    // 2. Hidden(64) -> Hidden(64) + Activation Func
     // ====================================================
     for (int L = 0; L < MIDDLE_LAYER_COUNT; L++)
     {
@@ -62,7 +65,9 @@ float3 RunVoxelMLP(float3 InPos, StructuredBuffer<float> Weights)
                 Sum += LayerIn[i] * Weights[WStartIdx + i];
             }
 
-            TempOut[o] = max(0.0f, Sum);
+        	// Activation Func
+        	// TempOut[o] = max(0.0f, Sum); // ReLU
+        	TempOut[o] = sin(Sum * SIREN_W0); // SIREN
         }
 
         for (int k = 0; k < Dim; k++)
