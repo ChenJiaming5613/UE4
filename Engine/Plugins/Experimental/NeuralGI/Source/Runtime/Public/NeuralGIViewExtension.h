@@ -24,4 +24,7 @@ private:
 	
 	FStructuredBufferRHIRef VolumetricLightmapMLPBuffer;
 	FShaderResourceViewRHIRef VolumetricLightmapMLPBufferSRV;
+	FTexture3DRHIRef VolumetricLightmapMLPTexture;
+	FUnorderedAccessViewRHIRef VolumetricLightmapMLPTextureUAV;
+	FIntVector Dimensions;
 };

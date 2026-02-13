@@ -139,7 +139,17 @@ void MainPS(FCustomMeshPassVSToPS Input, out float4 OutColor : SV_Target0)
 	if (View.VolumetricLightmapMLPInfoVector.x == 1)
 	{
 		float3 IndirectionVolumeUVs = clamp(MaterialParameters.AbsoluteWorldPosition * View.VolumetricLightmapWorldToUVScale + View.VolumetricLightmapWorldToUVAdd, 0.0f, .99f);
-		float3 RGB = RunVoxelMLP(IndirectionVolumeUVs, View.VolumetricLightmapMLP);
+		float3 RGB = RunVoxelMLP(IndirectionVolumeUVs, View.VolumetricLightmapMLPBuffer);
+		IrradianceSH.R.V = RGB.x;
+		IrradianceSH.G.V = RGB.y;
+		IrradianceSH.B.V = RGB.z;
+		OutColor.rgb = max(float3(0, 0, 0), DotSH1(IrradianceSH, DiffuseTransferSH)) / PI;
+		OutColor.a = 1;
+	}
+	else if (View.VolumetricLightmapMLPInfoVector.x == 2)
+	{
+		float3 IndirectionVolumeUVs = clamp(MaterialParameters.AbsoluteWorldPosition * View.VolumetricLightmapWorldToUVScale + View.VolumetricLightmapWorldToUVAdd, 0.0f, .99f);
+		float3 RGB = Texture3DSampleLevel(View.VolumetricLightmapMLPTexture, PIVSharedAmbientSampler, IndirectionVolumeUVs, 0).xyz;
 		IrradianceSH.R.V = RGB.x;
 		IrradianceSH.G.V = RGB.y;
 		IrradianceSH.B.V = RGB.z;

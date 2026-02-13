@@ -754,7 +754,8 @@ FViewUniformShaderParameters::FViewUniformShaderParameters()
 	// [todo] Default to some other buffer
 	WaterIndirection = GIdentityPrimitiveBuffer.PrimitiveSceneDataBufferSRV;
 	WaterData = GIdentityPrimitiveBuffer.PrimitiveSceneDataBufferSRV;
-	VolumetricLightmapMLP = GIdentityPrimitiveBuffer.PrimitiveSceneDataBufferSRV;
+	VolumetricLightmapMLPBuffer = GIdentityPrimitiveBuffer.PrimitiveSceneDataBufferSRV;
+	VolumetricLightmapMLPTexture = BlackVolume;
 	VolumetricLightmapMLPInfoVector= FVector::ZeroVector;
 
 	HairScatteringLUTTexture = BlackVolume;

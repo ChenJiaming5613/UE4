@@ -860,7 +860,8 @@ BEGIN_GLOBAL_SHADER_PARAMETER_STRUCT_WITH_CONSTRUCTOR(FViewUniformShaderParamete
 
 	SHADER_PARAMETER_SRV(StructuredBuffer<float4>, WaterIndirection)
 	SHADER_PARAMETER_SRV(StructuredBuffer<float4>, WaterData)
-	SHADER_PARAMETER_SRV(StructuredBuffer<float>, VolumetricLightmapMLP)
+	SHADER_PARAMETER_SRV(StructuredBuffer<float>, VolumetricLightmapMLPBuffer)
+	SHADER_PARAMETER_TEXTURE(Texture3D, VolumetricLightmapMLPTexture)
 
 	SHADER_PARAMETER_UAV(RWBuffer<uint>, VTFeedbackBuffer)
 	SHADER_PARAMETER_UAV(RWTexture2D<uint>, QuadOverdraw)
@@ -1187,6 +1188,7 @@ public:
 	FShaderResourceViewRHIRef WaterIndirectionBuffer;
 	FShaderResourceViewRHIRef WaterDataBuffer;
 	FShaderResourceViewRHIRef VolumetricLightmapMLPBuffer;
+	FTexture3DRHIRef VolumetricLightmapMLPTexture;
 	FVector4 VolumetricLightmapMLPInfoVector;
 
 	/** Feature level for this scene */

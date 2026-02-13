@@ -1,0 +1,124 @@
+#include "/Engine/Public/Platform.ush"
+
+StructuredBuffer<float> InVolumetricLightmapMLPBuffer;
+RWTexture3D<float4> OutVolumetricLightmapMLPTexture;
+int3 Dimensions;
+
+#define MAX_DIM 64
+#define INPUT_DIM 3
+#define OUTPUT_DIM 3
+
+#define MIDDLE_LAYER_COUNT 5
+
+#define SIREN_W0 30.0
+
+float3 RunVoxelMLP(float3 InPos, StructuredBuffer<float> Weights)
+{
+    uint Offset = 0;
+    
+    float LayerIn[MAX_DIM]; 
+    float TempOut[MAX_DIM];
+
+    // ====================================================
+    // 1. Input(3) -> Hidden(64) + Activation Func
+    // ====================================================
+    {
+        int InDim = INPUT_DIM;   // 3
+        int OutDim = MAX_DIM;    // 64
+        
+        uint BiasOffsetBase = Offset + (OutDim * InDim);
+
+        for (int o = 0; o < OutDim; o++)
+        {
+            float Sum = Weights[BiasOffsetBase + o];
+
+            uint WIdx = Offset + (o * InDim);
+            
+            Sum += InPos.x * Weights[WIdx + 0];
+            Sum += InPos.y * Weights[WIdx + 1];
+            Sum += InPos.z * Weights[WIdx + 2];
+
+            // Activation Func
+            // LayerIn[o] = max(0.0f, Sum); // ReLU
+        	LayerIn[o] = sin(Sum * SIREN_W0); // SIREN
+        }
+
+        Offset += (OutDim * InDim) + OutDim;
+    }
+
+    // ====================================================
+    // 2. Hidden(64) -> Hidden(64) + Activation Func
+    // ====================================================
+    for (int L = 0; L < MIDDLE_LAYER_COUNT; L++)
+    {
+        int Dim = MAX_DIM; // 64
+        uint BiasOffsetBase = Offset + (Dim * Dim);
+
+        for (int o = 0; o < Dim; o++)
+        {
+            float Sum = Weights[BiasOffsetBase + o];
+            
+            uint WStartIdx = Offset + (o * Dim);
+
+            for (int i = 0; i < Dim; i++)
+            {
+                Sum += LayerIn[i] * Weights[WStartIdx + i];
+            }
+
+        	// Activation Func
+        	// TempOut[o] = max(0.0f, Sum); // ReLU
+        	TempOut[o] = sin(Sum * SIREN_W0); // SIREN
+        }
+
+        for (int k = 0; k < Dim; k++)
+        {
+            LayerIn[k] = TempOut[k];
+        }
+
+        Offset += (Dim * Dim) + Dim;
+    }
+
+    // ====================================================
+    // 3. Hidden(64) -> Output(3) (Linear / No Activation)
+    // ====================================================
+    float3 Result;
+    {
+        int InDim = MAX_DIM;     // 64
+        int OutDim = OUTPUT_DIM; // 3
+        
+        uint BiasOffsetBase = Offset + (OutDim * InDim);
+
+        for (int o = 0; o < OutDim; o++)
+        {
+            float Sum = Weights[BiasOffsetBase + o];
+            uint WStartIdx = Offset + (o * InDim);
+
+            for (int i = 0; i < InDim; i++)
+            {
+                Sum += LayerIn[i] * Weights[WStartIdx + i];
+            }
+
+            Result[o] = Sum; 
+        }
+    }
+
+    return Result;
+}
+
+[numthreads(8, 8, 8)]
+void MainCS(uint3 DispatchThreadId : SV_DispatchThreadID)
+{
+	if (any(DispatchThreadId >= Dimensions))
+	{
+		return;
+	}
+
+	float3 Pos = float3(
+		DispatchThreadId.x * 1.0 / (Dimensions.x - 1),
+		DispatchThreadId.y * 1.0 / (Dimensions.y - 1),
+		DispatchThreadId.z * 1.0 / (Dimensions.z - 1)
+	);
+	float3 Data = RunVoxelMLP(Pos, InVolumetricLightmapMLPBuffer);
+	// float3 Data = Pos; // Test
+	OutVolumetricLightmapMLPTexture[DispatchThreadId] = float4(Data, 1.0);
+}

@@ -1457,9 +1457,21 @@ void FViewInfo::SetupUniformBufferParameters(
 	SetupPrecomputedVolumetricLightmapUniformBufferParameters(Scene, Family->EngineShowFlags, ViewUniformShaderParameters);
 	if (Scene && Scene->VolumetricLightmapSceneData.GetLevelVolumetricLightmap() && Family->EngineShowFlags.VolumetricLightmap)
 	{
+		bool bValid = false;
 		if (VolumetricLightmapMLPBuffer.IsValid())
 		{
-			ViewUniformShaderParameters.VolumetricLightmapMLP = VolumetricLightmapMLPBuffer.GetReference();
+			ViewUniformShaderParameters.VolumetricLightmapMLPBuffer = VolumetricLightmapMLPBuffer.GetReference();
+			bValid = true;
+		}
+
+		if (VolumetricLightmapMLPTexture.IsValid())
+		{
+			ViewUniformShaderParameters.VolumetricLightmapMLPTexture = OrBlack3DIfNull(VolumetricLightmapMLPTexture.GetReference());
+			bValid = true;
+		}
+		
+		if (bValid)
+		{
 			ViewUniformShaderParameters.VolumetricLightmapMLPInfoVector = VolumetricLightmapMLPInfoVector;
 		}
 	}
