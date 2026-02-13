@@ -10,6 +10,8 @@
 #include "Misc/MessageDialog.h"
 #include "ToolMenus.h"
 #include "Misc/FileHelper.h"
+#include "AssetToolsModule.h"
+#include "FAssetTypeActions_NeuralGIAsset.h"
 
 #define LOCTEXT_NAMESPACE "FNeuralGIEditorModule"
 
@@ -30,6 +32,9 @@ void FNeuralGIEditorModule::StartupModule()
 		FCanExecuteAction());
 
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FNeuralGIEditorModule::RegisterMenus));
+
+	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+	AssetTools.RegisterAssetTypeActions(MakeShareable(new FAssetTypeActions_NeuralGIAsset()));
 }
 
 void FNeuralGIEditorModule::ShutdownModule()
