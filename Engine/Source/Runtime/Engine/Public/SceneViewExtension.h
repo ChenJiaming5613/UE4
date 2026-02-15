@@ -146,6 +146,11 @@ public:
     virtual void PreRenderView_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView) = 0;
 
 	/**
+	 * Called on render thread right before Base Pass rendering. bDepthBufferIsPopulated is true if anything has been rendered to the depth buffer. This does not need to be a full depth prepass.
+	 */
+	virtual void PreRenderBasePass_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView, bool bDepthBufferIsPopulated) {}
+	
+	/**
 	 * Called right after Base Pass rendering finished
 	 */
 	virtual void PostRenderBasePass_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView) {};

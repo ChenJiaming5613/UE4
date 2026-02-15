@@ -11,6 +11,8 @@ public:
 	virtual ~FNeuralGIViewExtension() override;
 
 	virtual void SetupView(FSceneViewFamily& InViewFamily, FSceneView& InView) override;
+
+	virtual void PreRenderBasePass_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView, bool bDepthBufferIsPopulated) override;
 	
 	virtual void SetupViewFamily(FSceneViewFamily& InViewFamily) override {}
 	virtual void BeginRenderViewFamily(FSceneViewFamily& InViewFamily) override {}
@@ -20,6 +22,9 @@ public:
 	void InitResources(TResourceArray<float>& DataBufferCPU);
 	
 private:
+	void DispatchInferenceCS_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView, bool bDepthBufferIsPopulated) const;
+	void DispatchFillTestCS_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView, bool bDepthBufferIsPopulated) const;
+	
 	void ReleaseResources();
 	
 	FStructuredBufferRHIRef VolumetricLightmapMLPBuffer;

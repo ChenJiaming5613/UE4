@@ -1812,6 +1812,27 @@ void FDeferredShadingSceneRenderer::Render(FRHICommandListImmediate& RHICmdList)
 
 	AddServiceLocalQueuePass(GraphBuilder);
 	// End early occlusion queries
+	
+	if (ViewFamily.ViewExtensions.Num() > 0)
+	{
+		RDG_EVENT_SCOPE(GraphBuilder, "PreBasePass_ViewExtensions");
+		auto* PassParameters = GraphBuilder.AllocParameters<FEmptyShaderParameters>();
+		for (auto& ViewExtension : ViewFamily.ViewExtensions)
+		{
+			for (FViewInfo& View : Views)
+			{
+				RDG_GPU_MASK_SCOPE(GraphBuilder, View.GPUMask);
+				GraphBuilder.AddPass(
+					{},
+					PassParameters,
+					ERDGPassFlags::Compute | ERDGPassFlags::NeverCull,
+					[&ViewExtension, &View, bNeedsPrePass](FRHICommandListImmediate& RHICmdList)
+				{
+					ViewExtension->PreRenderBasePass_RenderThread(RHICmdList, View, bNeedsPrePass);
+				});
+			}
+		}
+	}
 
 	// Early Shadow depth rendering
 	if (bCanOverlayRayTracingOutput && bOcclusionBeforeBasePass)

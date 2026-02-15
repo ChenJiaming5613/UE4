@@ -1,0 +1,24 @@
+﻿#include "/Engine/Public/Platform.ush"
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/SHCommon.ush"
+#include "/Engine/Private/VolumetricLightmapShared.ush"
+
+RWTexture3D<float4> OutVolumetricLightmapMLPTexture;
+int3 Dimensions;
+
+[numthreads(8, 8, 8)]
+void MainCS(uint3 DispatchThreadId : SV_DispatchThreadID)
+{
+	int3 Coord = (int3)DispatchThreadId;
+	if (any(Coord >= Dimensions))
+	{
+		return;
+	}
+	int PaddedBrickSize = (int)View.VolumetricLightmapBrickSize + 1;
+	int3 BrickLoc = Coord / PaddedBrickSize;
+	int4 BrickOffsetAndSize = (int4)View.VolumetricLightmapIndirectionTexture.Load(int4(BrickLoc, 0));
+	int3 SampleCoord = BrickOffsetAndSize.xyz * PaddedBrickSize + Coord % PaddedBrickSize;
+	float3 AmbientVector = View.VolumetricLightmapBrickAmbientVector.Load(int4(SampleCoord, 0));
+	
+	OutVolumetricLightmapMLPTexture[Coord] = float4(AmbientVector, 1.0);
+}
