@@ -149,10 +149,8 @@ void MainPS(FCustomMeshPassVSToPS Input, out float4 OutColor : SV_Target0)
 	else if (View.VolumetricLightmapMLPInfoVector.x == 2)
 	{
 		float3 IndirectionVolumeUVs = clamp(MaterialParameters.AbsoluteWorldPosition * View.VolumetricLightmapWorldToUVScale + View.VolumetricLightmapWorldToUVAdd, 0.0f, .99f);
-		float3 IndirectionTextureTexelCoordinate = IndirectionVolumeUVs * View.VolumetricLightmapIndirectionTextureSize;
-		float PaddedBrickSize = View.VolumetricLightmapBrickSize + 1;
-		float3 SampleCoord = ((int3)IndirectionTextureTexelCoordinate * PaddedBrickSize + frac(IndirectionTextureTexelCoordinate) * View.VolumetricLightmapBrickSize + .5f)
-								/ (View.VolumetricLightmapIndirectionTextureSize * PaddedBrickSize);
+		float3 TotalTextureSize = View.VolumetricLightmapIndirectionTextureSize * View.VolumetricLightmapBrickSize;
+		float3 SampleCoord = (IndirectionVolumeUVs * TotalTextureSize + 0.5f) / TotalTextureSize;
 		float3 RGB = Texture3DSampleLevel(View.VolumetricLightmapMLPTexture, PIVSharedAmbientSampler, SampleCoord, 0).xyz;
 		IrradianceSH.R.V = RGB.x;
 		IrradianceSH.G.V = RGB.y;

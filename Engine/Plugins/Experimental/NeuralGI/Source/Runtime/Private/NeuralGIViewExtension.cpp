@@ -12,14 +12,14 @@ static TAutoConsoleVariable<int32> CVarNeuralGIEnable(
 	ECVF_RenderThreadSafe
 );
 
-static TAutoConsoleVariable<int32> CVarNeuralGICompare(
-	TEXT("r.NeuralGI.Compare"),
-	0,
-	TEXT("Controls the Neural GI Compare.\n")
-	TEXT(" 0: Disable\n")
-	TEXT(" 1: Enable"),
-	ECVF_RenderThreadSafe
-);
+// static TAutoConsoleVariable<int32> CVarNeuralGICompare(
+// 	TEXT("r.NeuralGI.Compare"),
+// 	0,
+// 	TEXT("Controls the Neural GI Compare.\n")
+// 	TEXT(" 0: Disable\n")
+// 	TEXT(" 1: Enable"),
+// 	ECVF_RenderThreadSafe
+// );
 
 class FNeuralGIInferenceCS : public FGlobalShader
 {
@@ -53,7 +53,7 @@ IMPLEMENT_SHADER_TYPE(, FFillTestCS, TEXT("/Plugins/NeuralGI/FillTest.usf"), TEX
 
 
 FNeuralGIViewExtension::FNeuralGIViewExtension(const FAutoRegister& AutoRegister)
-	: FSceneViewExtensionBase(AutoRegister), Dimensions(40, 40, 40)
+	: FSceneViewExtensionBase(AutoRegister), Dimensions(32, 32, 32)
 {
 }
 
@@ -80,14 +80,7 @@ void FNeuralGIViewExtension::SetupView(FSceneViewFamily& InViewFamily, FSceneVie
 void FNeuralGIViewExtension::PreRenderBasePass_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView,
 	bool bDepthBufferIsPopulated)
 {
-	if (CVarNeuralGICompare.GetValueOnRenderThread())
-	{
-		DispatchFillTestCS_RenderThread(RHICmdList, InView, bDepthBufferIsPopulated);
-	}
-	else
-	{
-		DispatchInferenceCS_RenderThread(RHICmdList, InView, bDepthBufferIsPopulated);
-	}
+	DispatchInferenceCS_RenderThread(RHICmdList, InView, bDepthBufferIsPopulated);
 }
 
 void FNeuralGIViewExtension::InitResources(TResourceArray<float>& DataBufferCPU)
