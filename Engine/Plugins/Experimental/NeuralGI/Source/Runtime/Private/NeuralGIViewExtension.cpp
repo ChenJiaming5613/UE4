@@ -2,24 +2,14 @@
 #include "SceneView.h"
 #include "ShaderParameterStruct.h"
 
-static TAutoConsoleVariable<int32> CVarNeuralGIEnable(
+TAutoConsoleVariable<int32> CVarNeuralGIEnable(
 	TEXT("r.NeuralGI.Enable"),
 	0,
-	TEXT("Controls the Neural GI Mode.\n")
-	TEXT(" 0: Disable (sets vector to 0,0,0,0)\n")
-	TEXT(" 1: Enable Inference Per Frame (sets vector to 1,0,0,0)")
-	TEXT(" 2: Enable Inference Once (sets vector to 2,0,0,0)"),
+	TEXT("Enable Neural GI\n")
+	TEXT(" 0: Disable\n")
+	TEXT(" 1: Enable"),
 	ECVF_RenderThreadSafe
 );
-
-// static TAutoConsoleVariable<int32> CVarNeuralGICompare(
-// 	TEXT("r.NeuralGI.Compare"),
-// 	0,
-// 	TEXT("Controls the Neural GI Compare.\n")
-// 	TEXT(" 0: Disable\n")
-// 	TEXT(" 1: Enable"),
-// 	ECVF_RenderThreadSafe
-// );
 
 class FNeuralGIInferenceCS : public FGlobalShader
 {
@@ -69,7 +59,7 @@ void FNeuralGIViewExtension::SetupView(FSceneViewFamily& InViewFamily, FSceneVie
 	{
 		InView.VolumetricLightmapMLPBuffer = VolumetricLightmapMLPBufferSRV;
 		InView.VolumetricLightmapMLPTexture = VolumetricLightmapMLPTexture;
-		InView.VolumetricLightmapMLPInfoVector = FVector4(Mode * 1.0f, 0, 0, 0);
+		InView.VolumetricLightmapMLPInfoVector = FVector4(1, 0, 0, 0);
 	}
 	else
 	{
@@ -125,6 +115,8 @@ void FNeuralGIViewExtension::InitResources(TResourceArray<float>& DataBufferCPU)
 void FNeuralGIViewExtension::DispatchInferenceCS_RenderThread(FRHICommandListImmediate& RHICmdList, FSceneView& InView,
 	bool bDepthBufferIsPopulated) const
 {
+	if (!VolumetricLightmapMLPBuffer.IsValid() || CVarNeuralGIEnable.GetValueOnRenderThread() == 0) return;
+	SCOPED_DRAW_EVENT(RHICmdList, NeuralGI_Inference);
 	const TShaderMapRef<FNeuralGIInferenceCS> ComputeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 	RHICmdList.SetComputeShader(ComputeShader.GetComputeShader());
 	FNeuralGIInferenceCS::FParameters PassParameters;
